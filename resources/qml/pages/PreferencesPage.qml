@@ -1,21 +1,34 @@
 import QtQuick 2.0
 import Sailfish.Silica 1.0
+import QtQuick.XmlListModel 2.0
 
 Page {
     id: page;
     allowedOrientations: Orientation.All;
 
-    SilicaFlickable {
-        anchors.fill: parent
-        contentHeight: column.height
+    PageHeader {
+        id: ph
+        title: qsTr("Settings")
+    }
 
-        VerticalScrollDecorator {}
+    SilicaListView
+    {
+        id: listView
 
-        Column {
+        anchors {
+            top: ph.bottom
+            left: parent.left
+            right: parent.right
+            bottom: parent.bottom
+        }
+
+        clip: true
+        spacing: Theme.paddingMedium;
+
+
+        header: Column {
             id: column
             width: parent.width
-
-            PageHeader { title: qsTr("Settings") }
 
             SectionHeader { text: qsTr("Notifications") }
 
@@ -47,13 +60,6 @@ Page {
                 }
             }
 
-            SectionHeader { text: qsTr("Attachments") }
-
-            Button {
-                text: qsTr("Edit attachment search paths")
-                onClicked: pageStack.push(Qt.resolvedUrl("AttachmentPathsPage.qml"))
-            }
-
             SectionHeader { text: qsTr("Features") }
 
             TextSwitch {
@@ -65,6 +71,63 @@ Page {
                 }
             }
 
+            Label
+            {
+                text: qsTr("Fingerprints of my devices")
+                width: parent.width
+                visible: dlModel.count > 0
+                leftPadding: Theme.horizontalPageMargin
+                topPadding: Theme.paddingLarge
+                bottomPadding: Theme.paddingMedium
+            }
+        }
+
+        model: XmlListModel {
+            id: dlModel
+            xml: shmoose.getFingerprints("")
+            query: "/devices/device"
+            XmlRole { name: "currentDevice"; query: "boolean(@current)" }
+            XmlRole { name: "deviceFp"; query: "fingerprint/string()" }
+        }
+
+        delegate: ListItem {
+
+            id: item
+            contentHeight: layout.height + thisDev.height
+
+            Label {
+                id: layout
+                width: listView.width
+                text: deviceFp
+                leftPadding: Theme.horizontalPageMargin
+                wrapMode: TextEdit.WordWrap
+                font.family: "Monospace"
+                font.pixelSize: Theme.fontSizeSmall
+            }
+            Label {
+                id: thisDev
+                width: listView.width
+                anchors.top: layout.bottom
+                leftPadding: Theme.horizontalPageMargin
+                text: qsTr("This is current device")
+                visible: currentDevice
+                font.pixelSize: Theme.fontSizeTiny
+            }
+
+            MouseArea {
+                anchors.fill: parent
+
+                onPressAndHold: {
+                    item.openMenu();
+                }
+            }
+
+            menu: ContextMenu {
+                MenuItem {
+                    text: qsTr("Copy to Clipboard")
+                    onClicked: Clipboard.text = deviceFp
+                }
+            }
         }
     }
 }

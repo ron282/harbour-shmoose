@@ -519,6 +519,133 @@ bool LurchAdapter::isOmemoUser(const QString& bareJid)
     return returnValue;
 }
 
+QString LurchAdapter::getFingerprints(const QString& bareJid)
+{
+  QString returnValue;
+  QString err_msg;
+
+  bool returnMyFp = bareJid.isEmpty();
+  int ret_val = 0;
+
+  char * db_fn_omemo = nullptr;
+  axc_context * axc_ctx_p = nullptr;
+  uint32_t id = 0;
+  uint32_t remove_id = 0;
+  axc_buf * key_buf_p = nullptr;
+  char * fp_printable = nullptr;
+  omemo_devicelist * own_dl_p = nullptr;
+  omemo_devicelist * other_dl_p = nullptr;
+  GList * own_l_p = nullptr;
+  GList * other_l_p = nullptr;
+  GList * curr_p = nullptr;
+  xmlnode * dl_node_p = nullptr;
+
+  db_fn_omemo = lurch_util_uname_get_db_fn(uname_, LURCH_DB_NAME_OMEMO);
+
+  ret_val = lurch_util_axc_get_init_ctx(uname_, &axc_ctx_p);
+  if (ret_val) {
+    err_msg = QString("Failed to create axc ctx.");
+    goto cleanup;
+  }
+
+  ret_val = axc_get_device_id(axc_ctx_p, &id);
+  if (ret_val) {
+    err_msg = QString("Failed to access axc db %1. Does the path seem correct?").arg(axc_context_get_db_fn(axc_ctx_p));
+    goto cleanup;
+  }
+
+    ret_val = axc_key_load_public_own(axc_ctx_p, &key_buf_p);
+    if (ret_val) {
+      err_msg = QString("Failed to access axc db %1.").arg(axc_context_get_db_fn(axc_ctx_p));
+      goto cleanup;
+    }
+
+    fp_printable = lurch_util_fp_get_printable(key_buf_p);
+
+    if(returnMyFp)
+        returnValue = QString("<devices><device current=\"true\"><id>%1</id><fingerprint>%2</fingerprint></device>").arg(id).arg(fp_printable);
+    else
+        returnValue = QString("<devices>");
+
+    g_free(fp_printable);
+    fp_printable = nullptr;
+
+    ret_val = omemo_storage_user_devicelist_retrieve(uname_, db_fn_omemo, &own_dl_p);
+    if (ret_val) {
+      err_msg = QString("Failed to access omemo db %1.").arg(db_fn_omemo);
+      goto cleanup;
+    }
+
+    own_l_p = omemo_devicelist_get_id_list(own_dl_p);
+    for (curr_p = own_l_p; curr_p; curr_p = curr_p->next) {
+        if (omemo_devicelist_list_data(curr_p) != id) {
+            ret_val = axc_key_load_public_addr(uname_, omemo_devicelist_list_data(curr_p), axc_ctx_p, &key_buf_p);
+            if (ret_val < 0) {
+                err_msg = QString("Failed to access axc db %1.").arg(axc_context_get_db_fn(axc_ctx_p));
+                goto cleanup;
+            } else if (ret_val == 0) {
+                continue;
+            }
+
+        fp_printable = lurch_util_fp_get_printable(key_buf_p);
+        axc_buf_free(key_buf_p);
+        key_buf_p = nullptr;
+
+        if(returnMyFp) {
+            returnValue += QString("<device><id>%1</id><fingerprint>%2</fingerprint></device>")
+                                   .arg(omemo_devicelist_list_data(curr_p)).arg(fp_printable);
+            }
+        }
+        g_free(fp_printable);
+        fp_printable = nullptr;
+    }
+
+    if(!returnMyFp) {
+        ret_val = omemo_storage_user_devicelist_retrieve(bareJid.toStdString().c_str(), db_fn_omemo, &other_dl_p);
+        if (ret_val) {
+          err_msg = QString("Failed to access omemo db %1.").arg(db_fn_omemo);
+          goto cleanup;
+        }
+
+        other_l_p = omemo_devicelist_get_id_list(other_dl_p);
+        for (curr_p = other_l_p; curr_p; curr_p = curr_p->next) {
+          ret_val = axc_key_load_public_addr(bareJid.toStdString().c_str(), omemo_devicelist_list_data(curr_p), axc_ctx_p, &key_buf_p);
+          if (ret_val < 0) {
+            err_msg = QString("Failed to access axc db %1.").arg(axc_context_get_db_fn(axc_ctx_p));
+            goto cleanup;
+          } else if (ret_val == 0) {
+            continue;
+          }
+
+          fp_printable = lurch_util_fp_get_printable(key_buf_p);
+          axc_buf_free(key_buf_p);
+          key_buf_p = nullptr;
+
+          returnValue += QString("<device><id>%1</id><fingerprint>%2</fingerprint></device>").arg(omemo_devicelist_list_data(curr_p)).arg(fp_printable);
+          g_free(fp_printable);
+          fp_printable = nullptr;
+        }
+    }
+
+    returnValue.append("</devices>");
+
+cleanup:
+  if (ret_val < 0)
+    returnValue = QString("<error>%1</error>").arg(err_msg);
+
+  g_free(db_fn_omemo);
+  axc_context_destroy_all(axc_ctx_p);
+  axc_buf_free(key_buf_p);
+  g_free(fp_printable);
+  omemo_devicelist_destroy(own_dl_p);
+  omemo_devicelist_destroy(other_dl_p);
+  g_list_free_full(own_l_p, free);
+  g_list_free_full(other_l_p, free);
+
+  return returnValue;
+}
+
+
 void LurchAdapter::handleMessageReceived(Swift::Message::ref message)
 {
 #if 0

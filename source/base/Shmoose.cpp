@@ -344,6 +344,11 @@ bool Shmoose::isOmemoUser(const QString& jid)
     return lurchAdapter_->isOmemoUser(jid);
 }
 
+QString Shmoose::getFingerprints(const QString& jid)
+{
+    return lurchAdapter_->getFingerprints(jid);
+}
+
 QString Shmoose::getAttachmentPath()
 {
     return System::getAttachmentPath();

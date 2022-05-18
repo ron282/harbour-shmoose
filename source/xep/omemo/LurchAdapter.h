@@ -33,6 +33,7 @@ public:
     void setCurrentChatPartner(const QString& jid);
     void callLurchCmd(const std::vector<std::string>& sl);
     bool isOmemoUser(const QString& bareJid);    
+    QString getFingerprints(const QString& bareJid);
 
 signals:
     void rawMessageStanzaForSending(QString);

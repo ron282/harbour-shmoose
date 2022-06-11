@@ -26,6 +26,8 @@ public:
     static const QString sqlSessionName_;
     static const QString sqlSessionLastMsg_;
     static const QString sqlSessionUnreadMsg_;
+    static const QString sqlSessionLastMsgType_;
+    static const QString sqlSessionLastMsgDir_;
 
     static const QString sqlGcmName_;
     static const QString sqlGcmChatMemberName_;

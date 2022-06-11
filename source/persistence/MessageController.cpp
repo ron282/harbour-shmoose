@@ -1,6 +1,7 @@
 #include "System.h"
 #include "MessageController.h"
 #include "Database.h"
+#include "Settings.h"
 
 #include <QSqlRecord>
 #include <QSqlError>
@@ -185,7 +186,7 @@ bool MessageController::addMessage(const QString &id, const QString &jid, const 
         {
             if (direction == 1)
             {
-                emit signalMessageReceived(id, jid, message);
+                emit signalMessageReceived(id, jid, type, message);
             }
         }
         else

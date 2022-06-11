@@ -115,7 +115,7 @@ void SessionController::updateNumberOfUnreadMessages(QString const &jid, unsigne
     }
 }
 
-void SessionController::updateSession(QString const &jid, QString const &lastMessage)
+void SessionController::updateSession(QString const &jid, QString const &lastMessage, QString const &lastMsgType, unsigned int lastMsgDir)
 {
     unsigned int unreadMessages = getNumberOfUnreadMessagesForJid(jid);
 
@@ -126,10 +126,12 @@ void SessionController::updateSession(QString const &jid, QString const &lastMes
 
     QSqlQuery query(*(database_->getPointer()));
     QString sqlCommand =
-            "REPLACE into sessions (jid, lastmessage, timestamp, unreadmessages) VALUES ( \""
+            "REPLACE into sessions (jid, lastmessage, timestamp, unreadmessages, lastmsgtype, lastmsgdir) VALUES ( \""
             + jid + "\", \"" + lastMessage.simplified() + "\", "
             + QString::number(QDateTime::currentDateTimeUtc().toTime_t()) + ", "
-            + QString::number(unreadMessages) + " )";
+            + QString::number(unreadMessages) +
+            + ", \"" + lastMsgType.simplified() + "\", "
+            + QString::number(lastMsgDir) + " )";
 
     //qDebug() << sqlCommand;
 

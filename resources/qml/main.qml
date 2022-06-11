@@ -83,6 +83,9 @@ ApplicationWindow {
         onSignalMessageReceived: {
             var currentChatPartner = shmoose.getCurrentChatPartner();
             var isGroupMessage = shmoose.rosterController.isGroup(jid);
+            var toDownload = shmoose.settings.AskBeforeDownloading;
+            var notifmsg;
+
             if ( applicationActive == true && currentChatPartner.localeCompare(jid) == 0 ) {
                 return; // active app/chat, do not send
             }
@@ -96,7 +99,23 @@ ApplicationWindow {
                     return;
                 }
             }
-            newMessageNotification(id, jid, message);
+
+            if(startsWith(msgtype, "txt")) {
+                notifmsg = message;
+            }
+            else if(startsWith(msgtype, "image")) {
+                notifmsg = toDownload ? qsTr("image to download") : qsTr("image");
+            }
+            else if(startsWith(msgtype, "video")) {
+                notifmsg =  toDownload ? qsTr("video to download") : qsTr("video");
+            }
+            else if(startWsith(msgtype, "audio")) {
+                notifmsg =  toDownload ? qsTr("audio to download") : qsTr("audio");
+            } else {
+                notifmsg =  toDownload ? qsTr("file to download") : qsTr("file");
+            }
+
+            newMessageNotification(id, jid, notifmsg);
         }
     }
 
@@ -213,6 +232,10 @@ ApplicationWindow {
             mainWindow.hasInetConnection = mainWindow.getHasInetConnection()
             shmoose.setHasInetConnection(mainWindow.hasInetConnection)
         }
+    }
+
+    function startsWith(s,start) {
+        return (s.substring(0, start.length) == start);
     }
 }
 

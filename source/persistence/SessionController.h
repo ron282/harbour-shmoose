@@ -18,7 +18,7 @@ public:
     Q_INVOKABLE QVariant data(const QModelIndex &requestedIndex, int role=Qt::DisplayRole ) const;
     virtual QHash<int, QByteArray> roleNames() const;
 
-    void updateSession(QString const &jid, QString const &lastMessage);
+    void updateSession(QString const &jid, QString const &lastMessage, QString const &type, unsigned int direction);
     void updateNumberOfUnreadMessages(QString const &jid, unsigned int unreadMessages);
 
     void setCurrentChatPartner(QString const &jid);

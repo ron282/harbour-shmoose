@@ -35,7 +35,7 @@ public:
     void removeMessagesFromJid(const QString& jid);
 
 signals:
-    void signalMessageReceived(QString id, QString jid, QString message);
+    void signalMessageReceived(QString id, QString jid, QString msgtype, QString message);
     void signalMessageStateChanged(QString msgId, int state);
 
 public slots:

@@ -20,6 +20,8 @@ const QString Database::security_ = "security";                     // 0: non (p
 const QString Database::sqlSessionName_ = "sessions";               // sql table name
 const QString Database::sqlSessionLastMsg_ = "lastmessage";         // the content of the last message
 const QString Database::sqlSessionUnreadMsg_ = "unreadmessages";    // number of unread messages
+const QString Database::sqlSessionLastMsgType_ = "lastmsgtype";     // type of last message
+const QString Database::sqlSessionLastMsgDir_ = "lastmsgdir";       // direction of last message
 
 // groupchatmarker (gcm) table
 const QString Database::sqlGcmName_ = "groupchatmarkers";           // sql table name
@@ -94,7 +96,8 @@ bool Database::open(QString const &jid)
             if (! database_.tables().contains( sqlSessionName_ ))
             {
                 QString sqlCreateCommand = "create table " + sqlSessionName_ + " (" + sqlJid_ + " TEXT PRIMARY KEY, " + sqlSessionLastMsg_ + " TEXT, "
-                        + sqlTimestamp_ + " INTEGER, " + sqlSessionUnreadMsg_ + " INTEGER)";
+                        + sqlTimestamp_ + " INTEGER, " + sqlSessionUnreadMsg_ + " INTEGER, " + sqlSessionLastMsgType_ + " TEXT, "
+                        + sqlSessionLastMsgDir_ + " INTEGER)";
                 if (query.exec(sqlCreateCommand) == false)
                 {
                     qDebug() << "Error creating sessions table";
@@ -160,7 +163,7 @@ void Database::dumpDataToStdOut() const
     query.exec();
     rec = query.record();
 
-    qDebug() << "jid:\tlastmessage:\ttimestamp\tunreadmessages:";
+    qDebug() << "jid:\tlastmessage:\ttimestamp\tunreadmessages\tlastmsgtype\tlastmsgdir:";
     qDebug() << "---------------------------------------------------------------------------------------";
     while (query.next())
     {
@@ -168,7 +171,9 @@ void Database::dumpDataToStdOut() const
                 << query.value(Database::sqlJid_).toString() << "\t"
                 << query.value(Database::sqlSessionLastMsg_).toString() << "\t"
                 << query.value(Database::sqlTimestamp_).toInt() << "\t"
-                << query.value(Database::sqlSessionUnreadMsg_).toInt() << "\t";
+                << query.value(Database::sqlSessionUnreadMsg_).toInt() << "\t"
+                << query.value(Database::sqlSessionLastMsgType_).toString() << "\t"
+                << query.value(Database::sqlSessionLastMsgDir_).toInt() << "\t";
     }
 #endif
 }

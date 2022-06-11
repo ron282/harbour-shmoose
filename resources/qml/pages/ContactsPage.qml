@@ -6,6 +6,21 @@ Page {
     id: page;
     allowedOrientations: Orientation.All;
 
+//    Component {
+//        id: sectionHeading
+//        Rectangle {
+//            width: container.width
+//            height: childrenRect.height
+//
+//            required property string section
+//
+//            Label {
+//                text: parent.section
+//                font.pixelSize: Theme.fontSizeLarge
+//            }
+//        }
+//    }
+
     SilicaListView {
         id: jidlist
         header: Column {
@@ -27,6 +42,8 @@ Page {
             //            }
         }
         model: shmoose.rosterController.rosterList
+        spacing: Theme.paddingLarge
+
         delegate: ListItem {
             id: item;
             menu: contextMenu
@@ -56,6 +73,7 @@ Page {
             Column {
                 anchors {
                     left: img.right;
+                    right: parent.right
                     margins: Theme.paddingMedium;
                     verticalCenter: parent.verticalCenter;
                 }
@@ -69,18 +87,44 @@ Page {
                     font.pixelSize: Theme.fontSizeMedium;
                 }
                 Row {
+                    width: parent.width
+
+                    Rectangle {
+                        id: presence
+                        anchors {
+                            bottom: img.bottom
+                            right: img.right
+                            bottomMargin: Theme.paddingSmall
+                            rightMargin: Theme.paddingSmall
+                        }
+                        width: Math.max(lbl.implicitWidth+radius, Theme.iconSizeSmall)
+                        height: Theme.iconSizeExtraSmall
+                        radius: height*0.5
+                        color: availability === RosterItem.AVAILABILITY_ONLINE ? "green" : "gray"
+                        Label {
+                            id: lbl
+                            font.bold: true
+                            text: availability !== RosterItem.AVAILABILITY_ONLINE && availability !== RosterItem.AVAILABILITY_OFFLINE ? "?" : ""
+                            font.pixelSize: Theme.fontSizeTiny
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
                     Image {
                         id: subscriptionImage;
                         visible: ! shmoose.rosterController.isGroup(jid)
                         source: getSubscriptionImage(subscription);
                     }
                     Image {
+                        visible: false
                         id: availabilityImage;
                         source: getAvailabilityImage(availability)
                     }
                     Label {
                         id: jidId;
                         text: jid;
+                        width: parent.width - subscriptionImage.width - presence.width - 2*Theme.paddingMedium
+                        truncationMode: TruncationMode.Fade
                         color: Theme.secondaryColor;
                         font.pixelSize: Theme.fontSizeTiny;
                     }
@@ -106,7 +150,6 @@ Page {
                                         shmoose.rosterController.removeContact(jid)
                                     }
                                 })  
-                                
                             }
                         }
                     }
@@ -142,6 +185,10 @@ Page {
             }
 
         }
+
+//        section.property: "name"
+//        section.criteria: ViewSection.FirstCharacter
+//        section.delegate: sectionHeading
     }
 
     function getImage(jid) {

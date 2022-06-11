@@ -50,7 +50,7 @@ void Persistence::addMessage(QString const &id, QString const &jid, QString cons
     {
         if (messageController_->addMessage(id, jid, resource, message, type, direction, security, timestamp))
         {
-            sessionController_->updateSession(jid, message);
+            sessionController_->updateSession(jid, message, type, direction);
 
             emit messageControllerChanged();
             emit sessionControllerChanged();

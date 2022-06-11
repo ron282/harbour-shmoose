@@ -25,6 +25,7 @@ Page {
             hintText: qsTr("Select a contact to start a conversation")
         }
         model: shmoose.persistence.sessionController
+        spacing: Theme.paddingLarge
         delegate: ListItem {
             id: item;
             contentHeight: Theme.itemSizeMedium;
@@ -52,6 +53,27 @@ Page {
                     anchors.fill: parent;
                 }
             }
+            Rectangle {
+                width: Math.max(lblUnread.implicitWidth+radius, height)
+                height: lblUnread.implicitHeight
+                color: Theme.highlightBackgroundColor
+                radius: width*0.5
+                anchors {
+                    top: img.top
+                    right: img.right
+                    topMargin: Theme.paddingSmall
+                    rightMargin: Theme.paddingSmall
+                }
+                visible: (unreadmessages > 0) ? true : false
+                Label {
+                    id: lblUnread
+                    font.bold: true
+                    text: unreadmessages
+                    font.pixelSize: Theme.fontSizeTiny
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+            }
             Column {
                 anchors {
                     left: img.right;
@@ -61,19 +83,6 @@ Page {
                 }
 
                 Row {
-                    Rectangle {
-                        width: 45
-                        height: 45
-                        color: "#999900"
-                        radius: width*0.5
-                        visible: (unreadmessages > 0) ? true : false
-                        Label {
-                            text: unreadmessages
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
-
                     Label {
                         id: nameId;
                         wrapMode: Text.NoWrap
@@ -83,23 +92,31 @@ Page {
                         font.pixelSize: Theme.fontSizeMedium;
                     }
                 }
-                Label {
-                    id: jidId;
-                    text: jid;
-                    color: Theme.secondaryColor;
-                    font.pixelSize: Theme.fontSizeTiny;
-                }
-                Label {
-                    id: statusId;
-                    text: lastmessage;
-                    anchors {
-                        left: parent.left
-                        right: parent.right
+                Row {
+                    width: parent.width
+                    Label {
+                        id: me
+                        visible: lastmsgdir == 0
+                        text: qsTr("Me: ")
+                        color: Theme.secondaryColor
+                        font.pixelSize: Theme.fontSizeSmall
                     }
-                    wrapMode: Text.WrapAnywhere
-                    maximumLineCount: 1
-                    color: Theme.secondaryColor;
-                    font.pixelSize: Theme.fontSizeTiny;
+                    Label {
+                        id: statusId
+                        text: lastmessage
+                        visible: lastmsgtype == "txt"
+                        width: me.visible ? parent.width-me.width : parent.width
+                        truncationMode: TruncationMode.Fade
+                        color: Theme.primaryColor
+                        font.pixelSize: Theme.fontSizeSmall
+                    }
+                    Icon {
+                        visible: lastmsgtype !== "txt"
+                        width: Theme.iconSizeSmallPlus
+                        height: Theme.iconSizeSmallPlus
+                        anchors.verticalCenter: me.verticalCenter
+                        source: getFileSmallIcon(lastmsgtype)
+                    }
                 }
             }
 
@@ -130,6 +147,15 @@ Page {
         } else {
             return "image://theme/icon-l-people"
         }
+    }
+    function getFileSmallIcon(type) {
+        if(startsWith(type, "image")) return "image://theme/icon-m-file-image";
+        if(startsWith(type, "video")) return "image://theme/icon-m-file-video";
+        if(startsWith(type, "audio")) return "image://theme/icon-m-file-audio";
+        return "image://theme/icon-m-file-document-light";
+    }
+    function startsWith(s,start) {
+        return (s.substring(0, start.length) == start);
     }
 }
 

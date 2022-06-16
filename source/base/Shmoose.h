@@ -58,6 +58,8 @@ public:
     Q_INVOKABLE void saveAttachment(const QString &msg);
     Q_INVOKABLE unsigned int getMaxUploadSize();
 
+    Q_INVOKABLE QString addLinks(const QString &str);
+
     bool connectionState() const;
 
 public slots:
@@ -80,6 +82,7 @@ signals:
     void settingsChanged();
 
     void connectionStateChanged();
+    void rosterListChanged();
 
     void signalCanSendFile(bool);
 

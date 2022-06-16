@@ -81,6 +81,7 @@ Shmoose::Shmoose(Swift::NetworkFactories* networkFactories, QObject *parent) :
     // proxy signal to qml ui
     connect(connectionHandler_, SIGNAL(signalHasInetConnection(bool)), this, SIGNAL(signalHasInetConnection(bool)));
     connect(connectionHandler_, SIGNAL(connectionStateChanged()), this, SIGNAL(connectionStateChanged()));
+    connect(rosterController_, SIGNAL(rosterListChanged()), this, SIGNAL(rosterListChanged()));
 
     // show errors to user
     connect(mucManager_, SIGNAL(signalShowMessage(QString,QString)), this, SIGNAL(signalShowMessage(QString,QString)));
@@ -433,4 +434,33 @@ void Shmoose::fileUploaded(QString const&toJid, QString const&message, QString c
 unsigned int Shmoose::getMaxUploadSize()
 {
     return httpFileUploadManager_->getMaxFileSize();
+}
+
+QString Shmoose::addLinks(const QString &str)
+{
+    QStringList list=str.split(' ');
+
+    QStringList::iterator it;
+
+    for (it = list.begin(); it != list.end(); it++)
+    {
+        if((*it).contains('.') && (*it).endsWith('.') == false && (*it).contains("..") == false)
+        {
+            QUrl url(*it, QUrl::StrictMode);
+
+            if(url.isValid())
+            {
+                if(url.isRelative())
+                {
+                    (*it) = "<a href=\"http://" + (*it) + "\">" + (*it) +"</a>";
+                }
+                else
+                {
+                    (*it) = "<a href=\"" + (*it) + "\">" + (*it) +"</a>";
+                }
+            }
+        }
+    }
+
+    return list.join(' ');
 }

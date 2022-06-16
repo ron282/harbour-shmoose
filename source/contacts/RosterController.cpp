@@ -175,7 +175,7 @@ bool RosterController::updateAvailabilityForJid(const Swift::JID &jid, const Ros
     bool somethingChanged = false;
 
     QString localBareJid = QString::fromStdString(jid.toBare().toString());
-    appendToRosterIfNotAlreadyIn(localBareJid);
+    //appendToRosterIfNotAlreadyIn(localBareJid);
 
     for (auto item: rosterList_)
     {
@@ -192,6 +192,18 @@ bool RosterController::updateAvailabilityForJid(const Swift::JID &jid, const Ros
     return somethingChanged;
 }
 
+int RosterController::getAvailability(const QString& jid)
+{
+    for (auto item: rosterList_)
+    {
+        if (item->getJid().compare(jid, Qt::CaseInsensitive) == 0)
+        {
+            return item->getAvailability();
+        }
+    }
+
+    return RosterItem::AVAILABILITY_UNKNOWN;
+}
 
 void RosterController::handleUpdateFromPresence(const Swift::JID &jid, const QString &status, const RosterItem::Availability& availability)
 {
@@ -655,9 +667,9 @@ void RosterController::sortRosterList()
 {
     struct
     {
-        bool operator()(RosterItem* a, RosterItem* b)
+        bool operator()(RosterItem* a, RosterItem* b) const
         {
-            return a->getName() < b->getName();
+            return a->getName().compare(b->getName(), Qt::CaseInsensitive) < 0;
         }
     } customSort;
 

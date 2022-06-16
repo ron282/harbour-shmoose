@@ -29,6 +29,7 @@ Page {
         delegate: ListItem {
             id: item;
             contentHeight: Theme.itemSizeMedium;
+            property int availability : shmoose.rosterController.getAvailability(jid)
 
             onClicked: {
                 console.log("set current char partner: " + jid);
@@ -54,10 +55,20 @@ Page {
                 }
             }
             Rectangle {
+                id: presence
+                anchors {
+                    left: img.right
+                    top: img.top
+                }
+                width: Theme.paddingSmall
+                height: img.height
+                color: availability === RosterItem.AVAILABILITY_ONLINE ? "lime" : availability === RosterItem.AVAILABILITY_OFFLINE ? "gray" : "transparent"
+            }
+            Rectangle {
                 width: Math.max(lblUnread.implicitWidth+radius, height)
                 height: lblUnread.implicitHeight
                 color: Theme.highlightBackgroundColor
-                radius: width*0.5
+                radius: height*0.5
                 anchors {
                     top: img.top
                     right: img.right
@@ -76,7 +87,7 @@ Page {
             }
             Column {
                 anchors {
-                    left: img.right;
+                    left: presence.right;
                     margins: Theme.paddingMedium;
                     verticalCenter: parent.verticalCenter;
                     right: parent.right
@@ -129,6 +140,12 @@ Page {
                                             shmoose.persistence.removeConversation(jid);
                                         })
                     }
+                }
+            }
+            Connections {
+                target: shmoose
+                onRosterListChanged: {
+                    availability = shmoose.rosterController.getAvailability(jid);
                 }
             }
         }

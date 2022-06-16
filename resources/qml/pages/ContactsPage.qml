@@ -6,25 +6,23 @@ Page {
     id: page;
     allowedOrientations: Orientation.All;
 
-//    Component {
-//        id: sectionHeading
-//        Rectangle {
-//            width: container.width
-//            height: childrenRect.height
-//
-//            required property string section
-//
-//            Label {
-//                text: parent.section
-//                font.pixelSize: Theme.fontSizeLarge
-//            }
-//        }
-//    }
+    Component {
+        id: sectionHeading
+
+        Label {
+            text: section
+            color: Theme.highlightColor
+            font.pixelSize: Theme.fontSizeLarge
+            anchors {
+                left: parent.left
+                leftMargin: Theme.paddingMedium
+            }
+        }
+    }
 
     SilicaListView {
         id: jidlist
         header: Column {
-            spacing: Theme.paddingMedium;
             anchors {
                 left: parent.left;
                 right: parent.right;
@@ -42,11 +40,31 @@ Page {
             //            }
         }
         model: shmoose.rosterController.rosterList
-        spacing: Theme.paddingLarge
+        spacing: Theme.paddingMedium;
+
+        section.property: "name"
+        section.delegate: sectionHeading
+        section.criteria: ViewSection.FirstCharacter
 
         delegate: ListItem {
             id: item;
-            menu: contextMenu
+
+            menu: ContextMenu {
+                MenuItem {
+                    text:  qsTr("Remove");
+                    onClicked: {
+                        remorseAction(qsTr("Remove contact"),
+                        function() {
+                            if (shmoose.rosterController.isGroup(jid)) {
+                                shmoose.removeRoom(jid);
+                            }
+                            else {
+                                shmoose.rosterController.removeContact(jid);
+                            }
+                        });
+                    }
+                }
+            }
             contentHeight: Theme.itemSizeMedium;
             onClicked: {
                 shmoose.setCurrentChatPartner(jid)
@@ -60,6 +78,7 @@ Page {
                 anchors {
                     top: parent.top;
                     left: parent.left;
+                    leftMargin: Theme.paddingMedium
                     bottom: parent.bottom;
                 }
 
@@ -70,9 +89,19 @@ Page {
                     anchors.fill: parent;
                 }
             }
+            Rectangle {
+                id: presence
+                anchors {
+                    left: img.right
+                    top: img.top
+                }
+                width: Theme.paddingSmall
+                height: img.height
+                color: availability === RosterItem.AVAILABILITY_ONLINE ? "lime" : availability === RosterItem.AVAILABILITY_OFFLINE ? "gray" : "transparent"
+            }
             Column {
                 anchors {
-                    left: img.right;
+                    left: presence.right;
                     right: parent.right
                     margins: Theme.paddingMedium;
                     verticalCenter: parent.verticalCenter;
@@ -89,27 +118,6 @@ Page {
                 Row {
                     width: parent.width
 
-                    Rectangle {
-                        id: presence
-                        anchors {
-                            bottom: img.bottom
-                            right: img.right
-                            bottomMargin: Theme.paddingSmall
-                            rightMargin: Theme.paddingSmall
-                        }
-                        width: Math.max(lbl.implicitWidth+radius, Theme.iconSizeSmall)
-                        height: Theme.iconSizeExtraSmall
-                        radius: height*0.5
-                        color: availability === RosterItem.AVAILABILITY_ONLINE ? "green" : "gray"
-                        Label {
-                            id: lbl
-                            font.bold: true
-                            text: availability !== RosterItem.AVAILABILITY_ONLINE && availability !== RosterItem.AVAILABILITY_OFFLINE ? "?" : ""
-                            font.pixelSize: Theme.fontSizeTiny
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                    }
                     Image {
                         id: subscriptionImage;
                         visible: ! shmoose.rosterController.isGroup(jid)
@@ -123,7 +131,7 @@ Page {
                     Label {
                         id: jidId;
                         text: jid;
-                        width: parent.width - subscriptionImage.width - presence.width - 2*Theme.paddingMedium
+                        width: parent.width - subscriptionImage.width - Theme.paddingMedium
                         truncationMode: TruncationMode.Fade
                         color: Theme.secondaryColor;
                         font.pixelSize: Theme.fontSizeTiny;
@@ -134,25 +142,6 @@ Page {
                     text: status;
                     color: Theme.secondaryColor;
                     font.pixelSize: Theme.fontSizeTiny;
-                }
-                Component {
-                    id: contextMenu
-                    ContextMenu {
-                        MenuItem {
-                            text:  qsTr("Remove");
-                            onClicked: {
-                                remorseAction(qsTr("Remove contact"),
-                                function() {
-                                    if (shmoose.rosterController.isGroup(jid)) {
-                                        shmoose.removeRoom(jid)
-                                    }
-                                    else {
-                                        shmoose.rosterController.removeContact(jid)
-                                    }
-                                })  
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -186,9 +175,6 @@ Page {
 
         }
 
-//        section.property: "name"
-//        section.criteria: ViewSection.FirstCharacter
-//        section.delegate: sectionHeading
     }
 
     function getImage(jid) {

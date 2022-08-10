@@ -31,6 +31,7 @@ INCLUDEPATH += source/xep/omemo
 INCLUDEPATH += source/xep/omemo/payload
 INCLUDEPATH += source/xep/omemo/lurch
 INCLUDEPATH += source/xep/omemo/mock
+INCLUDEPATH += source/xep/calls
 INCLUDEPATH += source/room
 INCLUDEPATH += source/networkconnection
 INCLUDEPATH += source/contacts
@@ -134,7 +135,11 @@ SOURCES += \
     source/xep/omemo/payload/EncryptionPayload.cpp \
     source/xep/omemo/payload/EncryptionPayloadParser.cpp \
     source/xep/omemo/payload/EncryptionPayloadParserFactory.cpp \
-    source/xep/omemo/payload/EncryptionPayloadSerializer.cpp
+    source/xep/omemo/payload/EncryptionPayloadSerializer.cpp \
+    source/xep/calls/CallsManager.cpp \
+    source/xep/calls/IncomingCallManager.cpp \
+    source/xep/calls/JingleICETransportMethodPayloadParser.cpp \
+    source/xep/calls/JingleRtpDescriptionPayloadParser.cpp 
 
 HEADERS += source/base/Shmoose.h \
     source/base/Settings.h \
@@ -194,7 +199,15 @@ HEADERS += source/base/Shmoose.h \
     source/xep/omemo/payload/EncryptionPayload.h \
     source/xep/omemo/payload/EncryptionPayloadParser.h \
     source/xep/omemo/payload/EncryptionPayloadParserFactory.h \
-    source/xep/omemo/payload/EncryptionPayloadSerializer.h
+    source/xep/omemo/payload/EncryptionPayloadSerializer.h \
+    source/xep/calls/CallsManager.h \
+    source/xep/calls/IncomingCallManager.h \
+    source/xep/calls/JingleICETransportMethodPayload.h \
+    source/xep/calls/JingleICETransportMethodPayloadParser.h \
+    source/xep/calls/JingleICETransportMethodPayloadParserFactory.h \
+    source/xep/calls/JingleRtpDescription.h \
+    source/xep/calls/JingleRtpDescriptionPayloadParser.h \
+    source/xep/calls/JingleRtpDescriptionPayloadParserFactory.h 
 
 lupdate_only {
         SOURCES += resources/qml/*.qml \

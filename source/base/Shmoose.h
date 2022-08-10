@@ -20,6 +20,7 @@ class DiscoInfoHandler;
 class MamManager;
 class StanzaId;
 class LurchAdapter;
+class CallsManager;
 
 class Shmoose : public QObject
 {
@@ -120,6 +121,7 @@ public:
     MamManager *mamManager_;
     MucManager *mucManager_;
     DiscoInfoHandler* discoInfoHandler_;
+    CallsManager* callsManager_;
 
     QString jid_;
     QString password_;

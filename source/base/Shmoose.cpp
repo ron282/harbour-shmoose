@@ -33,6 +33,7 @@
 #include "StanzaId.h"
 #include "LurchAdapter.h"
 #include "Settings.h"
+#include "CallsManager.h"
 
 
 #include "System.h"
@@ -50,6 +51,7 @@ Shmoose::Shmoose(Swift::NetworkFactories* networkFactories, QObject *parent) :
     httpFileUploadManager_(new HttpFileUploadManager(this)),
     mamManager_(new MamManager(persistence_, this)),
     mucManager_(new MucManager(this)),
+    callsManager_(new CallsManager(this)),
     discoInfoHandler_(new DiscoInfoHandler(httpFileUploadManager_, mamManager_, this)),
     jid_(""), password_(""),
     version_("0.8.0"),
@@ -163,6 +165,15 @@ void Shmoose::mainConnect(const QString &jid, const QString &pass)
     // https://xmpp.org/extensions/xep-0280.html
     discoInfo.addFeature(Swift::DiscoInfo::MessageCarbonsFeature);
 
+    // https://xmpp.org/extensions/xep-0166.html
+    // https://xmpp.org/extensions/xep-0167.html
+    discoInfo.addFeature(Swift::DiscoInfo::JingleFeature);
+    discoInfo.addFeature("urn:xmpp:jingle:apps:rtp:1");
+    discoInfo.addFeature("urn:xmpp:jingle:transports:ice-udp:1");
+    discoInfo.addFeature("urn:xmpp:jingle:apps:rtp:audio");
+    discoInfo.addFeature("urn:xmpp:jingle:apps:dtls:0");
+    //discoInfo.addFeature("urn:xmpp:jingle:apps:rtp:video");
+
     // omemo
     Settings settings;
     if (settings.getSoftwareFeatureOmemoEnabled() == true)
@@ -230,6 +241,9 @@ void Shmoose::intialSetupOnFirstConnection()
     {
         lurchAdapter_->setupWithClient(client_);
     }
+
+    //init Calls Manager
+    callsManager_->setupWithClient(client_);
 
     // Save account data
     settings_->setJid(jid_);

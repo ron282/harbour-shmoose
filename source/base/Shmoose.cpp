@@ -18,6 +18,8 @@
 
 #include <Swiften/Base/IDGenerator.h>
 
+#include "QXmppLogger.h"
+
 #include "RosterController.h"
 #include "Persistence.h"
 #include "MessageController.h"
@@ -53,9 +55,13 @@ Shmoose::Shmoose(Swift::NetworkFactories* networkFactories, QObject *parent) :
     discoInfoHandler_(new DiscoInfoHandler(httpFileUploadManager_, mamManager_, this)),
     jid_(""), password_(""),
     version_("0.8.0"),
-    notSentMsgId_("")
+    notSentMsgId_(""),
+    qXmppClient_(new QXmppClient(this))
 {
     qApp->setApplicationVersion(version_);
+
+
+    qXmppClient_->connect(qXmppClient_, &QXmppClient::connected, this, &Shmoose::onConnected);
 
     connect(connectionHandler_, SIGNAL(signalInitialConnectionEstablished()), this, SLOT(intialSetupOnFirstConnection()));
 
@@ -137,12 +143,15 @@ void Shmoose::mainConnect(const QString &jid, const QString &pass)
     client_ = new Swift::Client(Swift::JID(completeJid.toStdString()), pass.toStdString(), netFactories_);
     client_->setAlwaysTrustCertificates();
 
+    qXmppClient_->connectToServer(completeJid+".new", pass);
+    rosterController_->setupWithClient(qXmppClient_);
     stanzaId_->setupWithClient(client_);
     connectionHandler_->setupWithClient(client_);
     messageHandler_->setupWithClient(client_);
 
-    tracer_ = new Swift::ClientXMLTracer(client_);
-    //tracer_ = nullptr;
+    //tracer_ = new Swift::ClientXMLTracer(client_);
+    tracer_ = nullptr;
+    qXmppClient_->logger()->setLoggingType(QXmppLogger::StdoutLogging);
 
     // configure the xmpp client
     softwareVersionResponder_ = new Swift::SoftwareVersionResponder(client_->getIQRouter());
@@ -209,10 +218,6 @@ void Shmoose::reConnect()
 
 void Shmoose::intialSetupOnFirstConnection()
 {
-    // Request the roster
-    rosterController_->setupWithClient(client_);
-    rosterController_->requestRoster();
-
     // pass the client pointer to the httpFileUploadManager
     httpFileUploadManager_->setupWithClient(client_);
 
@@ -234,6 +239,13 @@ void Shmoose::intialSetupOnFirstConnection()
     // Save account data
     settings_->setJid(jid_);
     settings_->setPassword(password_);
+}
+
+void Shmoose::onConnected()
+{
+    // Set-up the roster
+//    rosterController_->setupWithClient(qXmppClient_);
+//    rosterController_->requestRoster();
 }
 
 void Shmoose::setCurrentChatPartner(QString const &jid)

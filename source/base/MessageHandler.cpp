@@ -13,12 +13,15 @@
 #include <Swiften/Elements/CarbonsSent.h>
 #include <Swiften/Elements/Forwarded.h>
 
+#include "QXmppMessage.h"
+
+
 #include <QUrl>
 #include <QDebug>
 #include <QMimeDatabase>
 
 MessageHandler::MessageHandler(Persistence *persistence, Settings * settings, RosterController* rosterController, LurchAdapter* lurchAdapter, QObject *parent) : QObject(parent),
-    client_(nullptr), persistence_(persistence), lurchAdapter_(lurchAdapter), settings_(settings),
+    client_(nullptr), qXmppClient_(nullptr), persistence_(persistence), lurchAdapter_(lurchAdapter), settings_(settings),
     downloadManager_(new DownloadManager(this)),
     chatMarkers_(new ChatMarkers(persistence_, rosterController, this)),
     xmppMessageParserClient_(new XMPPMessageParserClient()),
@@ -44,6 +47,13 @@ void MessageHandler::setupWithClient(Swift::Client* client)
 
         setAskBeforeDownloading(settings_->getAskBeforeDownloading());
     }
+
+/*    if (qXmppClient != nullptr)
+    {
+        qXmppClient_ = qXmppClient;
+        qXmppClient_->connect(qXmppClient, &QXmppClient::messageReceived, this, &MessageHandler::onMessageReceived);
+    }
+*/
 }
 
 void MessageHandler::handleStanzaAcked(Swift::Stanza::ref stanza)
@@ -59,6 +69,15 @@ void MessageHandler::handleStanzaAcked(Swift::Stanza::ref stanza)
         }
     }
 }
+
+/*void MessageHandler::onMessageReceived(const QXmppMessage &message)
+{
+    QString from = message.from();
+    QString msg = message.body();
+
+    qDebug() << "QXmppMessage received from "<< from << " msg:" << msg << endl;
+}
+*/
 
 void MessageHandler::handleMessageReceived(Swift::Message::ref message)
 {

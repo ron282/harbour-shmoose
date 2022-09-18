@@ -21,6 +21,8 @@ class MamManager;
 class StanzaId;
 class LurchAdapter;
 
+#include "QXmppClient.h"
+
 class Shmoose : public QObject
 {
     Q_OBJECT
@@ -71,6 +73,7 @@ public slots:
 private slots:
     void sendReadNotification(bool active);
     void intialSetupOnFirstConnection();
+    void onConnected();
 
     void slotAboutToQuit();
 
@@ -102,6 +105,8 @@ public:
     RosterController* getRosterController();
     Persistence* getPersistence();
     Settings* getSettings();
+
+    QXmppClient *qXmppClient_;
 
     Swift::Client* client_{nullptr};
     Swift::ClientXMLTracer* tracer_;

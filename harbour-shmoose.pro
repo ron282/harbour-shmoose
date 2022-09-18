@@ -12,6 +12,15 @@ contains(DEFINES, TRAVIS) {
 
 include($$PWD/swift.pri)
 
+# path to local compiled swift lib
+contains(DEFINES, SFOS) {
+    QXMPPPATH = $$_PRO_FILE_PWD_/../qxmpp-sfos
+    INCLUDEPATH += $${QXMPPPATH}/src/base
+    INCLUDEPATH += $${QXMPPPATH}/src/client
+    INCLUDEPATH += $${QXMPPPATH}/build/src/base
+    LIBS += $${QXMPPPATH}/build/src/libqxmpp.a
+}
+
 TEMPLATE = app
 QT += qml quick core sql xml concurrent
 
@@ -60,7 +69,7 @@ LIBS += -lmxml -lgcrypt -lglib-2.0 -lsqlite3
 QMAKE_CXXFLAGS += $$system("pkg-config --cflags glib-2.0")
 QMAKE_CFLAGS += $$system("pkg-config --cflags glib-2.0 libxml-2.0")
 
-QMAKE_CXXFLAGS += -std=c++11
+QMAKE_CXXFLAGS += -std=c++17
 
 DEFINES += BOOST_SIGNALS_NO_DEPRECATION_WARNING
 

@@ -19,7 +19,6 @@ class MucManager;
 class DiscoInfoHandler;
 class MamManager;
 class StanzaId;
-class LurchAdapter;
 
 #include "QXmppClient.h"
 
@@ -119,7 +118,6 @@ public:
 
     StanzaId *stanzaId_;
     ConnectionHandler* connectionHandler_;
-    LurchAdapter* lurchAdapter_;
     MessageHandler* messageHandler_;
     HttpFileUploadManager* httpFileUploadManager_;
     MamManager *mamManager_;

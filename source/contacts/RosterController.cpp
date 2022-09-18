@@ -568,7 +568,7 @@ bool RosterController::isGroup(QString const &jid)
     QList<RosterItem*>::iterator it = rosterList_.begin();
     for (; it != rosterList_.end(); ++it)
     {
-        if (jid.compare((*it)->getJid()) == 0)
+        if (jid.compare((*it)->getJid(), Qt::CaseInsensitive) == 0)
         {
             returnValue = (*it)->isGroup();
             break;

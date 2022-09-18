@@ -19,12 +19,13 @@
 #include <Swiften/Base/IDGenerator.h>
 
 #include "QXmppLogger.h"
+#include "QXmppUtils.h"
+#include "QXmppMessage.h"
 
 #include "RosterController.h"
 #include "Persistence.h"
 #include "MessageController.h"
 
-#include "ChatMarkers.h"
 #include "ConnectionHandler.h"
 #include "MessageHandler.h"
 #include "HttpFileUploadManager.h"
@@ -33,7 +34,6 @@
 #include "DiscoInfoHandler.h"
 #include "CryptoHelper.h"
 #include "StanzaId.h"
-#include "LurchAdapter.h"
 #include "Settings.h"
 
 
@@ -47,8 +47,7 @@ Shmoose::Shmoose(Swift::NetworkFactories* networkFactories, QObject *parent) :
     settings_(new Settings(this)),
     stanzaId_(new StanzaId(this)),
     connectionHandler_(new ConnectionHandler(this)),
-    lurchAdapter_(new LurchAdapter(this)),
-    messageHandler_(new MessageHandler(persistence_, settings_, rosterController_, lurchAdapter_, this)),
+    messageHandler_(new MessageHandler(persistence_, settings_, rosterController_, this)),
     httpFileUploadManager_(new HttpFileUploadManager(this)),
     mamManager_(new MamManager(persistence_, this)),
     mucManager_(new MucManager(this)),
@@ -91,7 +90,6 @@ Shmoose::Shmoose(Swift::NetworkFactories* networkFactories, QObject *parent) :
     // show errors to user
     connect(mucManager_, SIGNAL(signalShowMessage(QString,QString)), this, SIGNAL(signalShowMessage(QString,QString)));
     connect(rosterController_, SIGNAL(signalShowMessage(QString,QString)), this, SIGNAL(signalShowMessage(QString,QString)));
-    connect(lurchAdapter_, SIGNAL(signalShowMessage(QString,QString)), this, SIGNAL(signalShowMessage(QString,QString)));
 
     // show status to user
     connect(httpFileUploadManager_, SIGNAL(showStatus(QString, QString)), this, SIGNAL(signalShowStatus(QString, QString)));
@@ -147,7 +145,7 @@ void Shmoose::mainConnect(const QString &jid, const QString &pass)
     rosterController_->setupWithClient(qXmppClient_);
     stanzaId_->setupWithClient(client_);
     connectionHandler_->setupWithClient(client_);
-    messageHandler_->setupWithClient(client_);
+    messageHandler_->setupWithClient(qXmppClient_);
 
     //tracer_ = new Swift::ClientXMLTracer(client_);
     tracer_ = nullptr;
@@ -167,7 +165,7 @@ void Shmoose::mainConnect(const QString &jid, const QString &pass)
     discoInfo.addFeature(Swift::DiscoInfo::MessageDeliveryReceiptsFeature);
 
     // https://xmpp.org/extensions/xep-0333.html
-    discoInfo.addFeature(ChatMarkers::chatMarkersIdentifier.toStdString());
+    discoInfo.addFeature("urn:xmpp:chat-markers:0");
 
     // https://xmpp.org/extensions/xep-0280.html
     discoInfo.addFeature(Swift::DiscoInfo::MessageCarbonsFeature);
@@ -176,8 +174,8 @@ void Shmoose::mainConnect(const QString &jid, const QString &pass)
     Settings settings;
     if (settings.getSoftwareFeatureOmemoEnabled() == true)
     {
-        discoInfo.addFeature(lurchAdapter_->getFeature().toStdString());
-        discoInfo.addFeature(lurchAdapter_->getFeature().toStdString() + "+notify");
+//        discoInfo.addFeature(lurchAdapter_->getFeature().toStdString());
+//        discoInfo.addFeature(lurchAdapter_->getFeature().toStdString() + "+notify");
     }
 
     // identify myself
@@ -203,6 +201,7 @@ void Shmoose::mainConnect(const QString &jid, const QString &pass)
 void Shmoose::mainDisconnect()
 {
     if (connectionState())
+
     {
         client_->disconnect();
     }
@@ -233,7 +232,7 @@ void Shmoose::intialSetupOnFirstConnection()
     // init and setup omemo stuff
     if (settings_->getSoftwareFeatureOmemoEnabled() == true)
     {
-        lurchAdapter_->setupWithClient(client_);
+//        lurchAdapter_->setupWithClient(client_);
     }
 
     // Save account data
@@ -243,17 +242,11 @@ void Shmoose::intialSetupOnFirstConnection()
 
 void Shmoose::onConnected()
 {
-    // Set-up the roster
-//    rosterController_->setupWithClient(qXmppClient_);
-//    rosterController_->requestRoster();
 }
 
 void Shmoose::setCurrentChatPartner(QString const &jid)
 {
     persistence_->setCurrentChatPartner(jid);
-
-    // lurchAdapter_ does not have access to persistence. share the informaion separat.
-    lurchAdapter_->setCurrentChatPartner(jid);
 
     sendReadNotification(true);
 }
@@ -287,24 +280,24 @@ void Shmoose::sendMessage(QString const &message, QString const &type)
 
 void Shmoose::sendFile(QString const &toJid, QString const &file)
 {
-    bool shouldEncryptFile = settings_->getSoftwareFeatureOmemoEnabled() && lurchAdapter_->isOmemoUser(toJid) && (! settings_->getSendPlainText().contains(toJid));
-    Swift::JID receiverJid(toJid.toStdString());
-    Swift::IDGenerator idGenerator;
-    notSentMsgId_ = QString::fromStdString(idGenerator.generateID());
+    bool shouldEncryptFile = settings_->getSoftwareFeatureOmemoEnabled() && (! settings_->getSendPlainText().contains(toJid));
+
+    QXmppMessage msg("", toJid, file);
 
     // messsage is added to the database 
-    persistence_->addMessage( notSentMsgId_,
-                          QString::fromStdString(receiverJid.toBare().toString()),
-                          QString::fromStdString(receiverJid.getResource()),
-                          file, QMimeDatabase().mimeTypeForFile(file).name(), 0, shouldEncryptFile ? 1 : 0);
+    persistence_->addMessage(msg.id(),
+                             QXmppUtils::jidToBareJid(toJid),
+                             QXmppUtils::jidToResource(toJid),
+                             file,
+                             QMimeDatabase().mimeTypeForFile(file).name(), 0, shouldEncryptFile ? 1 : 0);
 
-    persistence_->markMessageAsUploadingAttachment(notSentMsgId_);
+    persistence_->markMessageAsUploadingAttachment(msg.id());
 
     bool success = httpFileUploadManager_->requestToUploadFileForJid(file, toJid, shouldEncryptFile);
 
     if(!success)
     {
-        persistence_->markMessageAsSendFailed(notSentMsgId_);
+        persistence_->markMessageAsSendFailed(msg.id());
     }
 }
 
@@ -354,7 +347,8 @@ bool Shmoose::canSendFile()
 
 bool Shmoose::isOmemoUser(const QString& jid)
 {
-    return lurchAdapter_->isOmemoUser(jid);
+//    return lurchAdapter_->isOmemoUser(jid);
+    return true;
 }
 
 QString Shmoose::getAttachmentPath()
